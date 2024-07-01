@@ -1,0 +1,109 @@
+#include <16f877a_ders_11.h>
+#use delay(clock=4Mhz)
+#fuses XT,NOWDT
+#include <lcd.c>
+#define use_portb_lcd TRUE
+#define Buz   RB0
+float mesafe,zaman;
+
+#define trig pin_c0
+#define echo pin_c1
+
+void main()    
+{
+
+lcd_init();
+printf(lcd_putc,"\f hosgeldiniz"); //\f ile ekraný temizler
+delay_ms(1000);
+printf(lcd_putc,"\furkan celik");
+delay_ms(1000);
+
+setup_timer_1(T1_INTERNAL | T1_DIV_BY_1);  //Timerý çaðýrdýk
+
+
+   while(TRUE)
+   {
+      output_high(trig);//bu mesafeyi ölçmek için trig pinine sinyal çýkýþý olur 5v luk sinyal verdik
+      delay_us(10); //mikrosaniye olarak belirledik 
+      output_low(trig); //5v geri çektik
+     
+      
+      
+      while(!input(echo)) //echo pin 'i bir hareketlilik olmasýn, echo çalýþmadan önce while çalýþsýn
+      //ve echoya sinyal gelmeden önce timer ile zamaný hesaplayacaðýz
+      {}
+      set_timer1(0);
+      
+      while(input(echo)) //echo pininden sinyal gelene kadar bekle
+      {}
+      zaman=get_timer1(); 
+      mesafe =(zaman/2)/(29.15);  //gidiþ geliþ old için 2 ,29.15 us/cm ses hýzý
+      
+      lcd_gotoxy(1,1);   //lcd ekran 16sütun 2 satýrdan oluþuyor, 1.satýr ve 1.sütununa git
+      
+      if(mesafe>800)
+      {
+      
+      printf(lcd_putc,"\fcok uzaktasýnýz mesafe=%fcm", mesafe);
+      delay_ms(500); // bekleme süresi koyuyoruz ki hemen kaybolmasýn gözümüz görsün
+      }
+      else
+      {
+      printf(lcd_putc,"\f mesafe =%fcm", mesafe);
+      delay_ms(500); // bekleme süresi koyuyoruz ki hemen kaybolmasýn gözümüz görsün
+      }
+      
+      
+      
+      
+   }
+   
+   nsigned char ReceivChar;
+TRISB = 0x00;  
+PORTB = 0x04;     //PORTB configured as O/P
+Serial_init();        
+printf("\033[2J");                
+DelayMs(20);
+printf("Press 1: Buzzer ON \n\r\t2: Buzzer OFF");
+while(1)
+{
+while(RCIF==0); //Wait until the reception is over
+RCIF=0;         //Clear the flag for next reception
+ReceivChar=RCREG; //Store the received char to a variable
+printf(" %c",ReceivChar);//Dislpay the character received
+switch(ReceivChar)
+{  
+         case '1':   //If '1' is received Buzzer turned ON
+         Buz=1;
+         break;
+ 
+         case '2':   //If '2' is received Buzzer turned OFF
+         Buz=0;
+break;
+}
+}
+}
+void Serial_init()
+{
+TRISC=0xc0;       //RC7,RC6 set to usart mode(INPUT)  
+TXSTA=0x24;       //Enable (Serial Transmission,
+                     //Asynchronous mode, High Speed mode)
+SPBRG=BAUD_VAL;   //9600 baud at 10Mhz
+RCSTA=0x90;       //Usart Enable, Continuous receive enable
+TXIF=1;           //Start Transmit
+}
+void putch(unsigned char data)
+{
+while(TXIF==0);
+TXREG=data;       //Transmit the data serially
+}
+void DelayMs(unsigned int Ms)
+{
+ int delay_cnst;
+ while(Ms>0)
+{
+Ms--;
+for(delay_cnst = 0;delay_cnst <220;delay_cnst++);
+}
+
+}
