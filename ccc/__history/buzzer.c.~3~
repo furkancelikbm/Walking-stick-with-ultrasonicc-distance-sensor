@@ -1,0 +1,22 @@
+
+
+void main()
+{
+ADCON1=0X0F;  //. This define we want to use PORTE pins as digital pins
+TRISB.B7=1;  // declares pin number seven of PORTB as a input pin
+TRISE.B0=0;  // declares pin number zero of PORTE as a output pin
+PORTB.B7=0;  // initialized it to zero or logic Low
+while(1)
+{
+if (PORTB.B7==0)
+{
+PORTE.B0=0;
+}
+else
+{
+PORTE.B0=1;
+}
+
+}
+
+}

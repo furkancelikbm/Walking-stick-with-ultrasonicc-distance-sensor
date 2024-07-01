@@ -1,0 +1,60 @@
+#include <16f877a_ders_11.h>
+#use delay(clock=4Mhz)
+#fuses XT,NOWDT
+#include <lcd.c>
+#define use_portb_lcd TRUE
+float mesafe,zaman;
+
+#define trig pin_c0
+#define echo pin_c1
+
+void main()    
+{
+
+lcd_init();
+printf(lcd_putc,"\f hosgeldiniz"); //\f ile ekraný temizler
+delay_ms(1000);
+printf(lcd_putc,"\furkan celik");
+delay_ms(1000);
+
+setup_timer_1(T1_INTERNAL | T1_DIV_BY_1);  //Timerý çaðýrdýk
+
+
+   while(TRUE)
+   {
+      output_high(trig);//bu mesafeyi ölçmek için trig pinine sinyal çýkýþý olur 5v luk sinyal verdik
+      delay_us(10); //mikrosaniye olarak belirledik 
+      output_low(trig); //5v geri çektik
+     
+      
+      
+      while(!input(echo)) //echo pin 'i bir hareketlilik olmasýn, echo çalýþmadan önce while çalýþsýn
+      //ve echoya sinyal gelmeden önce timer ile zamaný hesaplayacaðýz
+      {}
+      set_timer1(0);
+      
+      while(input(echo)) //echo pininden sinyal gelene kadar bekle
+      {}
+      zaman=get_timer1(); 
+      mesafe =(zaman/2)/(29.15);  //gidiþ geliþ old için 2 ,29.15 us/cm ses hýzý
+      
+      lcd_gotoxy(1,1);   //lcd ekran 16sütun 2 satýrdan oluþuyor, 1.satýr ve 1.sütununa git
+      
+      if(mesafe>800)
+      {
+      
+      printf(lcd_putc,"\fcok uzaktasýnýz mesafe=%fcm", mesafe);
+      delay_ms(500); // bekleme süresi koyuyoruz ki hemen kaybolmasýn gözümüz görsün
+      }
+      else
+      {
+      printf(lcd_putc,"\f mesafe =%fcm", mesafe);
+      delay_ms(500); // bekleme süresi koyuyoruz ki hemen kaybolmasýn gözümüz görsün
+      }
+      
+      
+      
+      
+   }
+
+}
